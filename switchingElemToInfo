@@ -1,0 +1,57 @@
+# Create new_array as the same size as segmentSet, and new_array is filled with the item from targetSet corresponding to the items in segmentSet.
+    # For example, let say segmentSet is a list of 2 lists with numerous items. These each list composes a segment.
+      # segmentSet has two segments and each segment has different number of components.
+      # segmentSet = [[5600, 5602], [4000, 4001, 5600]]
+      # The first list in segmentSet has two components; 5600, 5602 and the second element has three components; 4000, 4001, 5600
+      
+    # Let say, there is a datafrmae contains information about each component.
+      # Let say, ElemList is the list of components from the dataframe.
+      # and targetSet is the information that you are interested in about each component.
+      # ElemList =   [1, 2, 3, 4, ... 4000, 4001, ... 5600, 5601, 5602, ... 6000]
+      # targetSet =  [4, 6, 7, 8, ... 3011, 3012, ... 4560, 4561, 4562, ... ... ]
+    
+    # This function finds index number of every segments of each component in segmentSet, and replace it into the item from targetSet at the same index number.
+    # What you need to provide is
+      # list of index information (ElemList)
+      # component list (segmentSet)
+      # list of information that you are interested (targetSet)
+      # ElemList and targetSet has to be corresponding with the same index information.
+    # As a result,
+      # new_array = [[4560, 4562, nan], [3011, 3012, 4560]] (numpy array)
+
+    # Later on, you can stack the new_array to collect information that you are interested by changing targetSet.
+      # And conduct some processing to get some meaningful values such as get min or max value among the targetSets
+      
+import numpy as np
+import pandas as pd
+
+def _switchElement_targetElement(ElemList, segmentSet, targetSet):
+    segmentSet = pd.DataFrame(segmentSet).values
+    new_array = np.empty_like(segmentSet)  # create an empty array with same shape as the original array
+
+    for i in range(segmentSet.shape[0]):
+        for j in range(segmentSet.shape[1]):
+            value = segmentSet[i][j]
+            if np.isnan(value):
+                new_array[i][j] = np.nan
+            else:
+                new_array[i][j] = targetSet[ElemList.index(int(value))]
+    return new_array
+
+# example
+# First segment has 2, 4, 7 components and every components have value from I, J.
+# Therefore, in other words the first segment has 6 values. min_amongIJ_perSegment gives min value among all I & J for each segments.
+
+DF = pd.DataFrame({'Elem':np.arange(0, 10, 1), 'I':np.random.random(10), 'J':np.random.random(10)})
+segmentSet = [[2, 4, 7], [3, 5], [4, 6, 7, 8]]
+
+IJ_array = []
+for Ni in ['I', 'J']:
+  IJ_array.append(_switchElement_targetElement(list(DF['Elem']), segmentSet, list(DF[Ni])))
+
+IJ_array3D = np.stack(IJ_array, axis = 0)
+min_IJ = np.nanmin(IJ_array3D, axis = 0)
+max_IJ = np.nanmax(IJ_array3D, axis = 0)
+min_amongIJ_perSegment = np.nanmin(min_IJ, axis = 1)
+max_amongIJ_perSegment = np.nanmax(max_IJ, axis = 1)
+
